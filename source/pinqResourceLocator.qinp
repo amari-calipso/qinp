@@ -1,0 +1,9 @@
+<qinp! route="/<path>">
+    try {
+        reply send_file(
+            os.path.join(os.getcwd(), kwargs["path"])
+        );
+    } catch {
+        reply pinq.make_response(("Not found", 404));
+    }
+</qinp!>

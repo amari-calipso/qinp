@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<qinp! route="/internal/test">
+    package random:   import randint;
+    package datetime: import datetime;
+</qinp!>
+<html>
+    <head>
+        <title>qinp! test page</title>
+        <qinp!>
+            echo """
+                <style>
+                    img {
+                        width: 100px;
+                        height: auto;
+                    }
+                    div {
+                        color: rgb(%d, %d, %d)
+                    }
+                </style>
+            """ % (randint(0, 255), randint(0, 255), randint(0, 255));
+        </qinp!>
+    </head>
+    <body>
+        <h1>Welcome to qinp!</h1>
+        If everything is working properly, you should see qinp!'s logo, current time, 
+        a random number between 1 and 10 and the input request.<br><br>
+
+        <img src="/static/internal/logo.png" alt="logo">
+        
+        <qinp!>
+            echo f'<p>Time: {datetime.now().strftime("%H:%M:%S")}</p>';
+            echo f"<div>Random number: {randint(0, 10)}</div><br>";
+            echo escape(request);
+        </qinp!>
+    </body>
+</html>
