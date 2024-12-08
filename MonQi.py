@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2023 thatsOven
+Copyright (c) 2023 Amari Calipso
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -46,9 +46,9 @@ class Token:
 
         if self.line >= self.maxline - 3:
             return range(self.maxline - 5, self.maxline)
-        
+
         return range(self.line - 3, self.line + 2)
-    
+
     def __message(self, type_, color, msg):
         if self.tokens is None: print(color + f"{type_}{colorama.Style.RESET_ALL}:", msg)
         else:
@@ -59,12 +59,12 @@ class Token:
             for line in self.__getlines():
                 if line == self.line - 1:
                     print(
-                        f"{str(line).rjust(maxlineLen)} | " + self.tokens.source[line].rstrip() + "\n" + 
+                        f"{str(line).rjust(maxlineLen)} | " + self.tokens.source[line].rstrip() + "\n" +
                         (" " * maxlineLen) + " |" + (" " * (self.pos + 1)) + color + ("^" * len(self.tok)) + colorama.Style.RESET_ALL
                     )
 
                     continue
-                
+
                 print(f"{str(line).rjust(maxlineLen)} | " + self.tokens.source[line].rstrip())
 
     def error(self, msg):
@@ -103,9 +103,9 @@ class Tokens:
             tmp = self.tokens[self.pos]
             self.pos += 1
             return tmp
-        
+
         self.tokens[self.pos - 1].error("invalid syntax: the expression wasn't properly closed. no tokens remaining")
-    
+
     def last(self) -> Token:
         return self.tokens[self.pos - 1]
 
@@ -115,10 +115,10 @@ class Tokens:
             first.tok += next.tok
             tokens.append(first)
             return True
-        
+
         tokens.append(first)
         return False
-    
+
     def join(self):
         buf = ""
         lastIsIdentifier = False
@@ -152,7 +152,7 @@ class Tokens:
         inString      = False
         inStringAlt   = False
         lastSym       = False
-        
+
         for ch in source:
             if inLineComment:
                 if ch == "\n":
@@ -161,14 +161,14 @@ class Tokens:
                     pos   = 0
                     tmp.append(Token("", line, pos, self))
                     continue
-                
+
                 pos += 1
                 continue
 
             match ch:
                 case " " | "\t":
                     if inString or inStringAlt: tmp[-1].tok += ch
-                    else:        
+                    else:
                         tmp.append(Token("", line, pos + 1, self))
                 case "#":
                     if inString or inStringAlt: tmp[-1].tok += ch
@@ -209,7 +209,7 @@ class Tokens:
                             tmp.append(Token(ch, line, pos, self))
                         else:
                             tmp[-1].tok += ch
-                    else:                            
+                    else:
                         lastSym = True
                         tmp.append(Token(ch, line, pos, self))
 
@@ -219,7 +219,7 @@ class Tokens:
         while i < len(tmp):
             if tmp[i].tok == "":
                 tmp.pop(i)
-            else: 
+            else:
                 tmp[i].maxline = line
                 i += 1
 
@@ -280,12 +280,12 @@ class Tokens:
                     tokens.append(lastTok)
 
         return tokens
-    
+
 class _SortMode:
     NO, ASC, DESC = 0, 1, -1
 
 class MonQiError(Exception): ...
-    
+
 class MonQi:
     def __flagsErrorNoRel(self, kw, msg):
         if self.nextCount:
@@ -409,7 +409,7 @@ class MonQi:
             if tmp == _SortMode.NO:
                 self.nextSorted = _SortMode.NO
                 return
-            
+
             next = tokens.peek()
             if next is not None and next.tok.lower() == "by":
                 tokens.next()
@@ -433,34 +433,34 @@ class MonQi:
 
     def __all(self, *args):
         return eval('{"$and":' + str(args) + '}')
-    
+
     def __nor(self, *args):
         return eval('{"$nor":' + str(args) + '}')
-    
+
     def __any(self, *args):
         return eval('{"$or":' + str(args) + '}')
-    
+
     def __not(self, arg):
         return eval('{"$not":' + str(arg) + '}')
-    
+
     def __matchesRegex(self, attr, expr):
         return eval('{' + f'"{attr}":' + '{"$regex":' + f'"{expr}"' + '}}')
-    
+
     def __eq(self, attr, value):
         return eval('{' + f'"{attr}":' + '{"$eq":' + f'"{value}"' + '}}')
-    
+
     def __gt(self, attr, value):
         return eval('{' + f'"{attr}":' + '{"$gt":' + f'"{value}"' + '}}')
-    
+
     def __gte(self, attr, value):
         return eval('{' + f'"{attr}":' + '{"$gte":' + f'"{value}"' + '}}')
-    
+
     def __lt(self, attr, value):
         return eval('{' + f'"{attr}":' + '{"$lt":' + f'"{value}"' + '}}')
-    
+
     def __lte(self, attr, value):
         return eval('{' + f'"{attr}":' + '{"$lte":' + f'"{value}"' + '}}')
-    
+
     def __parseQuery(self, query):
         equal         = self.__eq
         EQUAL         = self.__eq
@@ -483,7 +483,7 @@ class MonQi:
         MATCHES_REGEX = self.__matchesRegex
 
         return eval(query)
-    
+
     def __fetchFlags(self, query, fields, kw):
         if self.nextCount:
             self.nextCount = False
@@ -534,7 +534,7 @@ class MonQi:
             query = self.__parseQuery(Tokens(self.__getUntilNotInExpr(';', tokens, True, advance = False)[1]).join())
             return self.__fetchFlags(query, fields, kw)
         return self.__fetchFlags({}, fields, kw)
-    
+
     def __editGen(self, fn):
         '''
         EDIT {"address": "Valley 345"} VALUES {"address": "Canyon 123", ...};
@@ -548,10 +548,10 @@ class MonQi:
             values = eval(Tokens(self.__getUntilNotInExpr(';', tokens, True, advance = False)[1]).join())
             self.current.__getattr__(fn)(query, values)
         return __fn
-    
+
     def __deleteGen(self, fn):
         '''
-        DELETE 
+        DELETE
 
         DELETE WITH {"address": "Valley 345"};
 
@@ -566,7 +566,7 @@ class MonQi:
             if next is not None and next.tok.lower() == 'with':
                 tokens.next()
                 query = Tokens(self.__getUntilNotInExpr(';', tokens, True, advance = False)[1]).join()
-                self.current.__getattr__(fn)(self.__parseQuery(query)) 
+                self.current.__getattr__(fn)(self.__parseQuery(query))
             self.current.__getattr__(fn)({})
         return __fn
 
@@ -598,10 +598,10 @@ class MonQi:
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, type, value, traceback):
         self.conn.close()
-        
+
     def __error(self, msg, token : Token):
         self.hadError = True
         token.error(msg)
@@ -613,7 +613,7 @@ class MonQi:
             next = self.getUntil(ch, tokens)
 
         return next
-    
+
     def __getUntilNotInExpr(self, ch, tokens : Tokens, buffer = False, errorNotFound = True, advance = True, unallowed = []):
         if type(ch) is str:
             ch = (ch, )
@@ -676,15 +676,15 @@ class MonQi:
 
                     if buffer: return next, buf
                     else:      return next
-                
+
             buf.append(next)
-                
+
         if rdBrack != 0:
             if lastRdBrack is None:
                 self.__error("unbalanced brackets ()", tokens.tokens[-1])
             else:
                 self.__error("unbalanced brackets ()", lastRdBrack)
-            
+
         if sqBrack != 0:
             if lastSqBrack is None:
                 self.__error("unbalanced brackets []", tokens.tokens[-1])
@@ -726,13 +726,13 @@ class MonQi:
 
             if pCount == 0:
                 return buf
-            
+
             buf.append(next)
 
         self.__error('unbalanced parenthesis "' + openCh + closeCh + '"', lastParen)
         return buf
-    
-    def __compiler(self, tokens: Tokens):  
+
+    def __compiler(self, tokens: Tokens):
         while tokens.isntFinished():
             next = tokens.next()
 
@@ -743,7 +743,7 @@ class MonQi:
                 self.__error("unknown statement", next)
 
         return tmp
-    
+
     def execute(self, code):
         self.hadError = False
 
@@ -752,5 +752,5 @@ class MonQi:
 
         if self.hadError:
             raise MonQiError()
-        
+
         return tmp

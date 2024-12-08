@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2023 thatsOven
+Copyright (c) 2023 Amari Calipso
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -108,14 +108,14 @@ class CustomHTMLParser(HTMLParser):
 def escape(obj):
     return str(_escape(str(obj)))
 
-print("pinq! runtime v2023.4.19 - thatsOven")
+print("pinq! runtime v2023.4.19")
 
 if __name__ == "__main__":
     parser = CustomHTMLParser()
     pinq   = Flask("pinq! runtime")
     error  = False
 
-    for f in os.listdir("source"): 
+    for f in os.listdir("source"):
         path = os.path.join("source", f)
         if os.path.isfile(path) and any((f.endswith(".html"), f.endswith(".htm"), f.endswith(".qinp"))):
             print(f"Loading {path}")
@@ -147,7 +147,7 @@ if __name__ == "__main__":
 
     with open("config.json", "r") as f:
         conf = load(f)
-    
+
     if "ip" not in conf:
         print("Invalid IP in config.json! Using default.")
         conf["ip"] = "0.0.0.0"

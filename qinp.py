@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2023 thatsOven
+Copyright (c) 2023 Amari Calipso
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -141,7 +141,7 @@ class NameStack:
     def peek(self):
         if len(self.array) != 0:
             return self.array[-1]
-        
+
         return (None, None)
 
     def lookfor(self, item):
@@ -192,9 +192,9 @@ class Token:
 
         if self.line >= self.maxline - 3:
             return range(self.maxline - 5, self.maxline)
-        
+
         return range(self.line - 3, self.line + 2)
-    
+
     def __message(self, type_, color, msg):
         if self.tokens is None: print(color + f"{type_}{colorama.Style.RESET_ALL}:", msg)
         else:
@@ -205,12 +205,12 @@ class Token:
             for line in self.__getlines():
                 if line == self.line - 1:
                     print(
-                        f"{str(line).rjust(maxlineLen)} | " + self.tokens.source[line].rstrip() + "\n" + 
+                        f"{str(line).rjust(maxlineLen)} | " + self.tokens.source[line].rstrip() + "\n" +
                         (" " * maxlineLen) + " |" + (" " * (self.pos + 1)) + color + ("^" * len(self.tok)) + colorama.Style.RESET_ALL
                     )
 
                     continue
-                
+
                 print(f"{str(line).rjust(maxlineLen)} | " + self.tokens.source[line].rstrip())
 
     def error(self, msg):
@@ -249,12 +249,12 @@ class Tokens:
             tmp = self.tokens[self.pos]
             self.pos += 1
             return tmp
-        
+
         self.tokens[self.pos - 1].error("invalid syntax: the expression wasn't properly closed. no tokens remaining")
-    
+
     def last(self) -> Token:
         return self.tokens[self.pos - 1]
-    
+
     @classmethod
     def replaceTokens(self, tokens):
         i = 0
@@ -274,10 +274,10 @@ class Tokens:
             first.tok += next.tok
             tokens.append(first)
             return True
-        
+
         tokens.append(first)
         return False
-    
+
     def join(self):
         buf = ""
         lastIsIdentifier = False
@@ -311,7 +311,7 @@ class Tokens:
         inString      = False
         inStringAlt   = False
         lastSym       = False
-        
+
         for ch in source:
             if inLineComment:
                 if ch == "\n":
@@ -320,14 +320,14 @@ class Tokens:
                     pos   = 0
                     tmp.append(Token("", line, pos, self))
                     continue
-                
+
                 pos += 1
                 continue
 
             match ch:
                 case " " | "\t":
                     if inString or inStringAlt: tmp[-1].tok += ch
-                    else:        
+                    else:
                         tmp.append(Token("", line, pos + 1, self))
                 case "#":
                     if inString or inStringAlt: tmp[-1].tok += ch
@@ -368,7 +368,7 @@ class Tokens:
                             tmp.append(Token(ch, line, pos, self))
                         else:
                             tmp[-1].tok += ch
-                    else:                            
+                    else:
                         lastSym = True
                         tmp.append(Token(ch, line, pos, self))
 
@@ -378,7 +378,7 @@ class Tokens:
         while i < len(tmp):
             if tmp[i].tok == "":
                 tmp.pop(i)
-            else: 
+            else:
                 tmp[i].maxline = line
                 i += 1
 
@@ -418,7 +418,7 @@ class Tokens:
                             if i < len(tmp) and tmp[i].tok == "=":
                                 token.tok += next.tok + tmp[i].tok
                                 i += 1
-                            else: 
+                            else:
                                 token.tok += next.tok
                         else:
                             token.tok += tmp[i].tok
@@ -432,7 +432,7 @@ class Tokens:
                             if i < len(tmp) and tmp[i].tok == "=":
                                 token.tok += next.tok + tmp[i].tok
                                 i += 1
-                            else: 
+                            else:
                                 token.tok += next.tok
                         else:
                             token.tok += tmp[i].tok
@@ -446,7 +446,7 @@ class Tokens:
                             if i < len(tmp) and tmp[i].tok == "=":
                                 token.tok += next.tok + tmp[i].tok
                                 i += 1
-                            else: 
+                            else:
                                 token.tok += next.tok
                         else:
                             token.tok += tmp[i].tok
@@ -460,7 +460,7 @@ class Tokens:
                             if i < len(tmp) and tmp[i].tok == "=":
                                 token.tok += next.tok + tmp[i].tok
                                 i += 1
-                            else: 
+                            else:
                                 token.tok += next.tok
                         else:
                             token.tok += tmp[i].tok
@@ -501,13 +501,13 @@ class Compiler:
     def __class(self, tokens: Tokens, tabs, loop):
         name = tokens.next()
         argsString = ""
-            
+
         next = tokens.peek()
         if next.tok == ":":
             next = tokens.next()
             next, args = self.getUntil("{", tokens, True)
             argsString = Tokens(args).join()
-                
+
             if self.nextAbstract:
                 self.nextAbstract = False
                 argsString += ",_ABSTRACT_BASE_CLASS_"
@@ -527,22 +527,22 @@ class Compiler:
         if len(block) == 0:
             self.out += "pass\n"
             return loop
-        
+
         self.out += "\n"
-                
+
         self.__nameStack.push((name.tok, "class"))
         self.__compiler(Tokens(block), tabs + 1, loop)
         self.__nameStack.pop()
         return loop
-    
+
     def __asyncGen(self, keyw):
         def fn(tokens : Tokens, tabs, loop):
             self.out += (" " * tabs) + keyw + " "
 
             return loop
-        
+
         return fn
-    
+
     def __return(self, tokens : Tokens, tabs, loop):
         if self.__nameStack.lookfor("fn") is None:
             self.__error('cannot use "return" outside of a function', tokens.last())
@@ -552,13 +552,13 @@ class Compiler:
             tokens.next()
             self.out += (" " * tabs) + "return\n"
             return loop
-        
+
         _, val = self.getUntilNotInExpr(";", tokens, True, advance = False)
 
         self.out += (" " * tabs) + Tokens([Token("return")] + val).join() + "\n"
-            
+
         return loop
-    
+
     def __break(self, tokens : Tokens, tabs, loop):
         keyw = tokens.last()
         next = tokens.peek()
@@ -573,7 +573,7 @@ class Compiler:
         self.out += (" " * tabs) + "break\n"
 
         return loop
-    
+
     def __continue(self, tokens : Tokens, tabs, loop):
         keyw = tokens.last()
         next = tokens.peek()
@@ -593,7 +593,7 @@ class Compiler:
         self.out += (" " * tabs) + "continue\n"
 
         return loop
-    
+
     def __untilEnd(self, keyw):
         def fn(tokens : Tokens, tabs, loop):
             _, val = self.getUntilNotInExpr(";", tokens, True, advance = False)
@@ -601,9 +601,9 @@ class Compiler:
             self.out += (" " * tabs) + Tokens([Token(keyw)] + val).join() + "\n"
 
             return loop
-    
+
         return fn
-    
+
     def __abstract(self, tokens : Tokens, tabs, loop):
         self.nextAbstract = True
 
@@ -617,7 +617,7 @@ class Compiler:
         self.nextStatic = True
 
         return loop
-        
+
     def __package(self, tokens : Tokens, tabs, loop):
         _, name = self.getUntilNotInExpr(":", tokens, True, advance = False)
         strName = Tokens(name).join()
@@ -627,11 +627,11 @@ class Compiler:
         self.headers += "from " + strName + " "
 
         return loop
-    
+
     def __import(self, tokens : Tokens, tabs, loop):
         keyw = tokens.last()
         _, imports = self.getUntilNotInExpr(";", tokens, True, advance = False)
-        
+
         if len(imports) == 1 and imports[0].tok == "*":
             if self.lastPackage == "":
                 self.__error('cannot use "import *" if no package is defined', keyw)
@@ -645,7 +645,7 @@ class Compiler:
         self.headers += "import " + Tokens(imports).join() + "\n"
 
         return loop
-    
+
     def __simpleBlock(self, keyw, kwname, push = None):
         def fn(tokens : Tokens, tabs, loop):
             self.checkDirectNext("{", f'"{kwname}"', tokens)
@@ -655,7 +655,7 @@ class Compiler:
 
             if len(block) == 0:
                 self.out += ":pass\n"
-            else: 
+            else:
                 self.out += ":\n"
 
                 if push is None:
@@ -666,17 +666,17 @@ class Compiler:
                     self.__nameStack.pop()
 
             return loop
-        
+
         return fn
-    
+
     def __block(self, keyw, inLoop = None, content = None, after = None, push = None):
         def fn(tokens : Tokens, tabs, loop):
             loopNotDef = inLoop is None
-            if loopNotDef: 
+            if loopNotDef:
                 internalLoop = loop
             else:
                 internalLoop = inLoop
-            
+
             if content is None:
                 _, localContent = self.getUntilNotInExpr("{", tokens, True, advance = False)
             else: localContent = content
@@ -691,7 +691,7 @@ class Compiler:
                 if len(block) == 0:
                     self.out += ":pass\n"
                     return loop
-                 
+
                 self.out += ":\n"
 
             if push is None:
@@ -704,9 +704,9 @@ class Compiler:
             if loopNotDef: loop = tmp
 
             return loop
-        
+
         return fn
-    
+
     def __do(self, tokens : Tokens, tabs, loop):
         peek = tokens.peek()
 
@@ -735,7 +735,7 @@ class Compiler:
     def __matchLoop(self, tokens : Tokens, tabs, loop):
         while tokens.isntFinished():
             next = tokens.next()
-            
+
             if next.tok.startswith('"""') or next.tok.startswith("'''"):
                 self.out += next.tok + "\n"
                 continue
@@ -749,25 +749,25 @@ class Compiler:
                     self.__error('invalid identifier in "match" statement body', next)
 
         return loop
-    
+
     def __match(self, tokens : Tokens, tabs, loop):
         _, value = self.getUntilNotInExpr("{", tokens, True, advance = False)
         block = self.getSameLevelParenthesis("{", "}", tokens)
 
         if len(block) == 0:
             return loop
-        
+
         self.out += (" " * tabs) + Tokens([Token("match")] + value).join() +":\n"
 
         self.__matchLoop(Tokens(block), tabs, loop)
-    
+
     def __handleAssignmentChain(self, tabs, variablesDef):
         buf  = ""
         objs = []
 
         if len(variablesDef) != 0:
             variablesDef = Tokens(variablesDef)
-                    
+
             next = variablesDef.next()
 
             while True:
@@ -797,22 +797,22 @@ class Compiler:
                         name = Token(Tokens(nameBuf).join())
 
                 if not variablesDef.isntFinished(): break
-                            
+
                 if   next.tok in SET_OPS:
                     op = next.tok
                     next, value = self.getUntilNotInExpr(",", variablesDef, True, False)
                     value = Tokens(value).join()
 
                     buf += (" " * tabs) + name.tok + op + value + "\n"
-                elif next.tok == ",": 
+                elif next.tok == ",":
                     next = variablesDef.next()
                 else:
-                    self.__error('invalid syntax: expecting "," or any assignment operator', next) 
+                    self.__error('invalid syntax: expecting "," or any assignment operator', next)
 
                 if next == "": break
 
-        return objs[:-1], buf 
-    
+        return objs[:-1], buf
+
     def __for(self, tokens : Tokens, tabs, loop):
         keyw = tokens.last()
         cnt = [x.tok for x in self.getUntilNotInExpr("{", tokens.copy(), True)[1]].count(";")
@@ -828,7 +828,7 @@ class Compiler:
                     buf = self.__handleAssignmentChain(tabs, variablesDef)
                     self.out += buf
 
-                if tokens.peek().tok == ";": 
+                if tokens.peek().tok == ";":
                     tokens.next()
                     condition = [Token("True")]
                 else:
@@ -861,7 +861,7 @@ class Compiler:
             case _:
                 self.__error('invalid syntax: using an unrecognized amount of semicolons in a for loop', keyw)
                 return loop
-            
+
         block = self.getSameLevelParenthesis("{", "}", tokens)
 
         self.out += (" " * tabs) + Tokens(statement).join() + ":"
@@ -871,14 +871,14 @@ class Compiler:
             else:                self.out += "\n" + increments
 
             return loop
-        
+
         self.out += "\n"
         self.__compiler(Tokens(block), tabs + 1, CompLoop(increments.lstrip()))
 
         if increments != "": self.out += increments
-            
+
         return loop
-    
+
     def __enum(self, tokens : Tokens, tabs, loop):
         _, value = self.getUntilNotInExpr("{", tokens, True, advance = False)
         block = self.getSameLevelParenthesis("{", "}", tokens)
@@ -886,7 +886,7 @@ class Compiler:
         if len(value) == 0:
             if len(block) == 0:
                 return loop
-            
+
             inTabs = tabs
         else:
             if len(value) > 1:
@@ -897,16 +897,16 @@ class Compiler:
             if len(block) == 0:
                 self.out += "pass\n"
                 return loop
-            
+
             self.out += "\n"
 
             inTabs = tabs + 1
 
         objs, assignments = self.__handleAssignmentChain(inTabs, block, False)
         self.out += (" " * inTabs) + Tokens(objs).join() + f"=range({str(len([x for x in objs if x.tok != ',']))})\n" + assignments
-        
+
         return loop
-    
+
     def __dbGen(self, flag, command, name):
         def __fn(tokens: Tokens, tabs, loop):
             _, content = self.getUntilNotInExpr("{", tokens, True, advance = False)
@@ -921,7 +921,7 @@ class Compiler:
             if len(block) == 0:
                 self.out += ":pass\n"
                 return loop
-                
+
             self.out += ":\n"
 
             self.__nameStack.push((None, "db"))
@@ -930,8 +930,8 @@ class Compiler:
 
             return loop
         return __fn
-    
-    def __query(self, tokens : Tokens, tabs, loop):           
+
+    def __query(self, tokens : Tokens, tabs, loop):
         kw = tokens.last()
 
         next = tokens.peek()
@@ -951,7 +951,7 @@ class Compiler:
         ).join() + "\n"
 
         return loop
-    
+
     def __terminate(self, tokens: Tokens, tabs, loop):
         keyw = tokens.last()
         next = tokens.peek()
@@ -965,7 +965,7 @@ class Compiler:
         self.out += (" " * tabs) + "return _HTML_BUF\n"
 
         return loop
-            
+
     def __init__(self):
         self.__entryPoint = -1
 
@@ -1022,7 +1022,7 @@ class Compiler:
         self.out     = f"def qinpEntryPoint{self.__entryPoint}(*args,**kwargs):\n _HTML_BUF="
         self.__nameStack = NameStack()
 
-        self.hadError = False        
+        self.hadError = False
         self.flags = {
             "abstract": False,
             "markup": False,
@@ -1044,7 +1044,7 @@ class Compiler:
             next = self.getUntil(ch, tokens)
 
         return next
-    
+
     def getUntil(self, ch, tokens : Tokens, buffer = False):
         buf = []
         while tokens.isntFinished():
@@ -1064,7 +1064,7 @@ class Compiler:
 
         if buffer: return "", buf
         else:      return ""
-    
+
     def getUntilNotInExpr(self, ch, tokens : Tokens, buffer = False, errorNotFound = True, advance = True, unallowed = []):
         rdBrack = 0
         sqBrack = 0
@@ -1124,15 +1124,15 @@ class Compiler:
 
                     if buffer: return next, buf
                     else:      return next
-                
+
             buf.append(next)
-                
+
         if rdBrack != 0:
             if lastRdBrack is None:
                 self.__error("unbalanced brackets ()", tokens.tokens[-1])
             else:
                 self.__error("unbalanced brackets ()", lastRdBrack)
-            
+
         if sqBrack != 0:
             if lastSqBrack is None:
                 self.__error("unbalanced brackets []", tokens.tokens[-1])
@@ -1174,7 +1174,7 @@ class Compiler:
 
             if pCount == 0:
                 return buf
-            
+
             buf.append(next)
 
         self.__error('unbalanced parenthesis "' + openCh + closeCh + '"', lastParen)
@@ -1195,7 +1195,7 @@ class Compiler:
             tokens.next()
 
             notInClass = self.__nameStack.peek()[1] != "class"
-            if notInClass: 
+            if notInClass:
                 self.__error(f"{msg} can only be used inside a class", name)
 
             if len(args) == 0:
@@ -1204,7 +1204,7 @@ class Compiler:
                 args = [Token("this"), Token(",")] + args
 
             argsString = Tokens(args).join()
-                                        
+
             if self.nextAbstract:
                 self.nextAbstract = False
 
@@ -1220,25 +1220,25 @@ class Compiler:
                     self.__error("cannot create static method outside of a class", name)
                 else:
                     self.out += (" " * tabs) + "@classmethod\n"
-                                                
+
             if next is None:
                 self.__error('invalid syntax: expecting "{"')
                 return
 
             block = self.getSameLevelParenthesis("{", "}", tokens)
-                                    
+
             self.out += (" " * tabs) + "def " + op + f"({argsString}):"
 
             if len(block) == 0:
                 self.out += "pass\n"
                 return
-            
+
             self.out += "\n" + (" " * (tabs + 1)) + "nonlocal _HTML_BUF\n"
             self.__nameStack.push((name.tok, "fn"))
             self.__compiler(Tokens(block), tabs + 1, loop)
             self.__nameStack.pop()
-    
-    def __compiler(self, tokens : Tokens, tabs, loop):  
+
+    def __compiler(self, tokens : Tokens, tabs, loop):
         while tokens.isntFinished():
             next = tokens.next()
 
@@ -1263,14 +1263,14 @@ class Compiler:
                                 tokens.next()
 
                                 inClass = self.__nameStack.peek()[1] == "class"
-                                if inClass: 
+                                if inClass:
                                     if len(args) == 0:
                                         args = [Token("this")]
                                     else:
                                         args = [Token("this"), Token(",")] + args
 
                                 argsString = Tokens(args).join()
-                                    
+
                                 if self.nextAbstract:
                                     self.nextAbstract = False
 
@@ -1286,13 +1286,13 @@ class Compiler:
                                         self.__error("cannot create static method outside of a class", name)
                                     else:
                                         self.out += (" " * tabs) + "@classmethod\n"
-                                                
+
                                 if next is None:
                                     self.__error('invalid syntax: expecting "{"')
                                     continue
-                                
+
                                 block = self.getSameLevelParenthesis("{", "}", tokens)
-                                    
+
                                 self.out += (" " * tabs) + "def " + name.tok + f"({argsString}):"
 
                                 if len(block) == 0:
@@ -1312,7 +1312,7 @@ class Compiler:
 
                             if name.tok == "operator":
                                 next = tokens.peek()
-                                
+
                                 if next is None:
                                     self.__error('expecting "[" after "operator!"', name)
                                 elif next.tok != "[":
@@ -1359,8 +1359,8 @@ class Compiler:
         self.nextStatic   = False
         self.lastPackage  = ""
         self.lastTabs     = 1
-        
+
         self.lastTabs = self.__compiler(Tokens(section), 1, None)[1]
 
 if __name__ == "__main__":
-    print("qinp! compiler v2023.4.19 - thatsOven\nThis file is not meant to be ran.")
+    print("qinp! compiler v2023.4.19\nThis file is not meant to be ran.")
